@@ -29,10 +29,10 @@ proc setup*(database: Database) =
   database.db.exec(sql"""
     CREATE TABLE IF NOT EXISTS Following(
       follower text,
-      username text,
-      PRIMARY KEY (follower, username),
+      followed_user text,
+      PRIMARY KEY (follower, followed_user),
       FOREIGN KEY (follower) REFERENCES User(username),
-      FOREIGN KEY (username) REFERENCES User(username)
+      FOREIGN KEY (followed_user) REFERENCES User(username)
     );
   """)
 
