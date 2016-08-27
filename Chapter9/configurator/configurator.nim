@@ -1,0 +1,82 @@
+import macros
+
+proc createRefType(ident: NimIdent, identDefs: seq[NimNode]): NimNode =
+  result = newNimNode(nnkTypeSection).add(
+    newNimNode(nnkTypeDef).add(
+      newIdentNode(ident),
+      newEmptyNode(),
+      newNimNode(nnkRefTy).add(
+        newNimNode(nnkObjectTy).add(
+          newEmptyNode(),
+          newEmptyNode(),
+          newNimNode(nnkRecList).add(
+            identDefs
+          )
+        )
+      )
+    )
+  )
+
+proc toIdentDefs(stmtList: NimNode): seq[NimNode] =
+  expectKind(stmtList, nnkStmtList)
+  result = @[]
+
+  for child in stmtList:
+    expectKind(child, nnkCall)
+    result.add(newIdentDefs(child[0], child[1][0]))
+
+template constructor(ident: untyped): untyped =
+  proc `new ident`(): `ident` =
+    new result
+
+proc createLoadProc(typeName: NimIdent, identDefs: seq[NimNode]): NimNode =
+  var cfgIdent = newIdentNode("cfg")
+  var filenameIdent = newIdentNode("filename")
+  var objIdent = newIdentNode("obj")
+
+  var body = newStmtList()
+  body.add quote do:
+    var `objIdent` = parseFile(`filenameIdent`)
+
+  for identDef in identDefs:
+    let fieldNameIdent = identDef[0]
+    let fieldName = $fieldNameIdent.ident
+    case $identDef[1].ident
+    of "string":
+      body.add quote do:
+        `cfgIdent`.`fieldNameIdent` = `objIdent`[`fieldName`].getStr
+    of "int":
+      body.add quote do:
+        `cfgIdent`.`fieldNameIdent` = `objIdent`[`fieldName`].getNum().int
+    else:
+      doAssert(false, "Not Implemented")
+
+  return newProc(newIdentNode("load"),
+    [newEmptyNode(),
+     newIdentDefs(cfgIdent, newIdentNode(typeName)),
+     newIdentDefs(filenameIdent, newIdentNode("string"))],
+    body)
+
+macro config*(typeName: untyped, fields: untyped): untyped =
+  result = newStmtList()
+
+  let identDefs = toIdentDefs(fields)
+  result.add createRefType(typeName.ident, identDefs)
+  result.add getAst(constructor(typeName.ident))
+  result.add createLoadProc(typeName.ident, identDefs)
+
+  echo treeRepr(typeName)
+  echo treeRepr(fields)
+
+  echo treeRepr(result)
+  echo repr(result)
+
+import json
+config MyAppConfig:
+  address: string
+  echo(123)
+
+var myConf = newMyAppConfig()
+myConf.load("myappconfig.cfg")
+echo("Address: ", myConf.address)
+echo("Port: ", myConf.port)
