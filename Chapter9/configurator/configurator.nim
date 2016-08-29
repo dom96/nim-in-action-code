@@ -1,15 +1,15 @@
 import macros
 
 proc createRefType(ident: NimIdent, identDefs: seq[NimNode]): NimNode =
-  result = newNimNode(nnkTypeSection).add(
-    newNimNode(nnkTypeDef).add(
+  result = newTree(nnkTypeSection,
+    newTree(nnkTypeDef,
       newIdentNode(ident),
       newEmptyNode(),
-      newNimNode(nnkRefTy).add(
-        newNimNode(nnkObjectTy).add(
+      newTree(nnkRefTy,
+        newTree(nnkObjectTy,
           newEmptyNode(),
           newEmptyNode(),
-          newNimNode(nnkRecList).add(
+          newTree(nnkRecList,
             identDefs
           )
         )
@@ -74,7 +74,7 @@ macro config*(typeName: untyped, fields: untyped): untyped =
 import json
 config MyAppConfig:
   address: string
-  echo(123)
+  port: int
 
 var myConf = newMyAppConfig()
 myConf.load("myappconfig.cfg")
