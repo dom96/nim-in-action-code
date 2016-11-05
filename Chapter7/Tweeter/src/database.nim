@@ -66,7 +66,7 @@ proc findUser*(database: Database, username: string, user: var User): bool =
   else: user.username = row[0]
 
   let following = database.db.getAllRows(
-      sql"SELECT username FROM Following WHERE follower = ?;", username)
+      sql"SELECT followed_user FROM Following WHERE follower = ?;", username)
   user.following = @[]
   for row in following:
     if row[0].len != 0:

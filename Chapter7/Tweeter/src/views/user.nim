@@ -18,7 +18,7 @@
   <span>Following: ${$user.following.len}</span>
   #if user.username notin currentUser.following:
   <form action="follow" method="post">
-    <input type="hidden" name="follower" value="d0m96">
+    <input type="hidden" name="follower" value="${currentUser.username}">
     <input type="hidden" name="target" value="${user.username}">
     <input type="submit" value="Follow">
   </form>
