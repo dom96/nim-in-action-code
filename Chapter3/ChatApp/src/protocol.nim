@@ -25,7 +25,7 @@ proc parseMessage*(data: string): Message {.raises: [MessageParsingError, KeyErr
   if result.username.len == 0:
     raise newException(MessageParsingError, "Username field is empty")
 
-  if not dataJson.hasKey("username"):
+  if not dataJson.hasKey("message"):
     raise newException(MessageParsingError, "Message field missing")
   result.message = dataJson["message"].getStr()
   if result.message.len == 0:
