@@ -35,19 +35,22 @@ proc createLoadProc(typeName: NimIdent, identDefs: seq[NimNode]): NimNode =
   var objIdent = newIdentNode("obj")
 
   var body = newStmtList()
-  body.add quote do:
+  body.add( quote do:
     var `objIdent` = parseFile(`filenameIdent`)
-
+  )
+  
   for identDef in identDefs:
     let fieldNameIdent = identDef[0]
     let fieldName = $fieldNameIdent.ident
     case $identDef[1].ident
     of "string":
-      body.add quote do:
+      body.add( quote do:
         `cfgIdent`.`fieldNameIdent` = `objIdent`[`fieldName`].getStr
+      )
     of "int":
-      body.add quote do:
+      body.add( quote do:
         `cfgIdent`.`fieldNameIdent` = `objIdent`[`fieldName`].getNum().int
+      )
     else:
       doAssert(false, "Not Implemented")
 
