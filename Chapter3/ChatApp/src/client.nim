@@ -34,7 +34,7 @@ let username = paramStr(2)
 var socket = newAsyncSocket()
 
 # Execute the ``connect`` procedure in the background asynchronously.
-asyncCheck connect(socket, serverAddr)
+asyncCheck connect(socket, serverAddr) # Note: see https://bit.ly/2IBIyB2.
 # Execute the ``readInput`` procedure in the background in a new thread.
 var messageFlowVar = spawn stdin.readLine()
 while true:
