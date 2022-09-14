@@ -1,6 +1,6 @@
-import macros
+import std/[macros, json]
 
-proc createRefType(ident: NimIdent, identDefs: seq[NimNode]): NimNode =
+proc createRefType(ident: string, identDefs: seq[NimNode]): NimNode =
   result = newTree(nnkTypeSection,
     newTree(nnkTypeDef,
       newIdentNode(ident),
@@ -29,7 +29,7 @@ template constructor(ident: untyped): untyped =
   proc `new ident`(): `ident` =
     new result
 
-proc createLoadProc(typeName: NimIdent, identDefs: seq[NimNode]): NimNode =
+proc createLoadProc(typeName: string, identDefs: seq[NimNode]): NimNode =
   var cfgIdent = newIdentNode("cfg")
   var filenameIdent = newIdentNode("filename")
   var objIdent = newIdentNode("obj")
@@ -40,14 +40,14 @@ proc createLoadProc(typeName: NimIdent, identDefs: seq[NimNode]): NimNode =
 
   for identDef in identDefs:
     let fieldNameIdent = identDef[0]
-    let fieldName = $fieldNameIdent.ident
-    case $identDef[1].ident
+    let fieldName = $fieldNameIdent.strVal
+    case $identDef[1].strVal
     of "string":
       body.add quote do:
         `cfgIdent`.`fieldNameIdent` = `objIdent`[`fieldName`].getStr
     of "int":
       body.add quote do:
-        `cfgIdent`.`fieldNameIdent` = `objIdent`[`fieldName`].getNum().int
+        `cfgIdent`.`fieldNameIdent` = `objIdent`[`fieldName`].getInt().int
     else:
       doAssert(false, "Not Implemented")
 
@@ -61,9 +61,9 @@ macro config*(typeName: untyped, fields: untyped): untyped =
   result = newStmtList()
 
   let identDefs = toIdentDefs(fields)
-  result.add createRefType(typeName.ident, identDefs)
-  result.add getAst(constructor(typeName.ident))
-  result.add createLoadProc(typeName.ident, identDefs)
+  result.add createRefType(typeName.strVal, identDefs)
+  result.add getAst(constructor(typeName))
+  result.add createLoadProc(typeName.strVal, identDefs)
 
   echo treeRepr(typeName)
   echo treeRepr(fields)
@@ -71,12 +71,12 @@ macro config*(typeName: untyped, fields: untyped): untyped =
   echo treeRepr(result)
   echo repr(result)
 
-import json
-config MyAppConfig:
-  address: string
-  port: int
+when isMainModule:
+  config MyAppConfig:
+    address: string
+    port: int
 
-var myConf = newMyAppConfig()
-myConf.load("myappconfig.cfg")
-echo("Address: ", myConf.address)
-echo("Port: ", myConf.port)
+  var myConf = newMyAppConfig()
+  myConf.load("myappconfig.cfg")
+  echo("Address: ", myConf.address)
+  echo("Port: ", myConf.port)
